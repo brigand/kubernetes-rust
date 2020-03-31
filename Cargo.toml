@@ -1,6 +1,6 @@
 [package]
-name = "kubernetes"
-version = "0.1.0"
+name = "tok8s"
+version = "0.2.0"
 edition = "2018"
 description = "Kubernetes rust client"
 authors = ["ynqa <un.pensiero.vano@gmail.com>"]
