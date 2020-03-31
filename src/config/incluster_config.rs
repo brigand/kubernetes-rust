@@ -1,12 +1,7 @@
 use std::env;
-use std::fs::File;
-use std::io::BufReader;
 
 use failure::Error;
-#[cfg(feature = "native-tls")]
 use openssl::x509::X509;
-#[cfg(feature = "rustls-tls")]
-use rustls::Certificate as X509;
 
 use crate::config::utils;
 
@@ -35,39 +30,9 @@ pub fn load_token() -> Result<String, Error> {
 }
 
 /// Returns certification from specified path in cluster.
-
-pub struct Cert {
-    inner: X509,
-}
-
-impl Cert {
-    #[cfg(feature = "native-tls")]
-    pub fn to_der(&self) -> Result<Vec<u8>, Error> {
-        let der = self.inner.to_der()?;
-        der
-    }
-
-    #[cfg(feature = "rustls-tls")]
-    pub fn to_der(&self) -> Result<Vec<u8>, Error> {
-        Ok(self.inner.as_ref().into_iter().collect())
-    }
-}
-
-#[cfg(feature = "native-tls")]
-pub fn load_cert() -> Result<Cert, Error> {
+pub fn load_cert() -> Result<X509, Error> {
     let ca = utils::data_or_file_with_base64(&None, &Some(SERVICE_CERTFILE.to_string()))?;
     X509::from_pem(&ca).map_err(Error::from)
-}
-
-#[cfg(feature = "rustls-tls")]
-pub fn load_cert() -> Result<Cert, Error> {
-    let ca = utils::data_or_file_with_base64(&None, &Some(SERVICE_CERTFILE.to_string()))?;
-    let mut reader = BufReader::new(ca);
-    let certs = rustls::pemfile::certs(&mut reader)?;
-    let cert = certs
-        .get(0)
-        .ok_or(|| format_err!("At least one certificate expected in {}", SERVICE_CERTFILE))?;
-    Ok(cert)
 }
 
 #[test]
