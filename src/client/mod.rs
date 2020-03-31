@@ -3,7 +3,7 @@ use std::sync::Arc;
 use failure::{format_err, Error};
 use http;
 use serde::de::DeserializeOwned;
-
+use reqwest::RequestBuilder;
 use super::config::Configuration;
 
 /// APIClient requires `config::Configuration` includes client to connect with kubernetes cluster.
@@ -22,9 +22,17 @@ impl APIClient {
     where
         T: DeserializeOwned,
     {
+        self.request_transform(request, |_| {}).await
+    }
+
+
+    /// Returns kubernetes resources binded `Arnavion/k8s-openapi-codegen` APIs.
+    pub async fn request_transform<T, F>(&self, request: http::Request<Vec<u8>>, transform: F) -> Result<T, Error>
+        where T: DeserializeOwned, F: FnOnce(&mut RequestBuilder)
+    {
         let (parts, body) = request.into_parts();
         let uri_str = format!("{}{}", self.configuration.base_path, parts.uri);
-        let req = match parts.method {
+        let mut req = match parts.method {
             http::Method::GET => self.configuration.client.get(&uri_str),
             http::Method::POST => self.configuration.client.post(&uri_str),
             http::Method::DELETE => self.configuration.client.delete(&uri_str),
@@ -32,9 +40,10 @@ impl APIClient {
             other => {
                 return Err(Error::from(format_err!("Invalid method: {}", other)));
             }
-        }
-        .body(body);
+        };
 
-        req.send().await?.json().await.map_err(Error::from)
+        transform(&mut req);
+
+        req.body(body).send().await?.json().await.map_err(Error::from)
     }
 }
