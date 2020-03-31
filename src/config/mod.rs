@@ -144,7 +144,8 @@ pub fn incluster_config() -> Result<Configuration, Error> {
     ))?;
 
     let ca = incluster_config::load_cert()?;
-    let req_ca = Certificate::from_der(&ca.to_der()?)?;
+    let der = ca.to_der()?;
+    let req_ca = Certificate::from_der(der.as_ref())?;
 
     let token = incluster_config::load_token()?;
     let mut headers = header::HeaderMap::new();

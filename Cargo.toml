@@ -10,6 +10,11 @@ readme = "README.md"
 keywords = ["kubernetes"]
 categories = ["web-programming::http-client"]
 
+[features]
+default = ["rustls-tls"]
+native-tls = ["openssl", "reqwest/native-tls"]
+rustls-tls = ["rustls", "reqwest/rustls-tls"]
+
 [dependencies]
 base64 = "0.12.0"
 chrono = "0.4.6"
@@ -17,11 +22,12 @@ dirs = "1.0.4"
 failure = "0.1.2"
 http = "0.2"
 lazy_static = "1.3.0"
-openssl = "0.10.12"
 serde_json = "1.0.39"
 serde_yaml = "0.8.5"
 time = "0.1.42"
 url = "1.7.2"
+openssl = { version = "0.10.12", optional = true }
+rustls = { version = "0.17", optional = true }
 
 [dependencies.serde]
 version = "1"
@@ -30,6 +36,7 @@ features = ["derive"]
 [dependencies.reqwest]
 version = "0.10.4"
 features = ["json", "blocking", "native-tls"]
+
 
 [dev-dependencies]
 tempfile = "3.0.4"
